@@ -1,5 +1,5 @@
 import "./App.css";
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import axios from "axios";
 
 function App() {
@@ -7,19 +7,7 @@ function App() {
   const [page, setPage] = useState(1);
   const [totalpages, setTotalpages] = useState(0);
 
-  // const fetchProducts = async () => {
-  //   const res = await fetch(
-  //     `https://dummyjson.com/products?limit=10&skip=${page * 10 - 10}`
-  //   );
-  //   const data = await res.json();
-  //   if (data && data.products) {
-  //     setProducts(data.products);
-  //     setTotalpages(data.total / 10);
-  //   }
-  // };
-  // console.log(products);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     await axios
       .get(`https://dummyjson.com/products?limit=10&skip=${page * 10 - 10}`)
       .then((response) => {
@@ -27,23 +15,24 @@ function App() {
         console.log(data);
         if (data && data.products) {
           setProducts(data.products);
-          setTotalpages(data.total / 10);
+          // Ensure totalpages is a valid number and rounded up
+          setTotalpages(Math.ceil(data.total / 10));
         }
       })
       .catch((error) => console.log(error));
-  };
-  console.log(products);
+  }, [page]); // Dependencies: only rerun if `page` changes
 
   useEffect(() => {
     fetchProducts();
-  }, [page]);
+  }, [fetchProducts]); // This ensures the effect runs when fetchProducts changes
 
+  // Removed `page` dependency from `useMemo` since it's not necessary
   useMemo(() => {
     window.scrollTo({ top: 0 });
   }, [page]);
 
   const selectPagehandler = (e) => {
-    if (e >= 1 && e < totalpages + 1) {
+    if (e >= 1 && e <= totalpages) {
       setPage(e);
     }
   };
@@ -63,7 +52,7 @@ function App() {
           })}
         </div>
       )}
-      {products.length > 0 && (
+      {products.length > 0 && totalpages > 0 && (
         <div className="pagination">
           <span
             className={page > 1 ? "" : "page_disable"}
@@ -71,7 +60,7 @@ function App() {
           >
             ◀
           </span>
-          {[...Array(totalpages)].map((_, i) => {
+          {[...Array(totalpages > 0 ? totalpages : 1)].map((_, i) => {
             return (
               <span
                 className={page === i + 1 ? "pagination_selected" : ""}
