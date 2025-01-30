@@ -1,5 +1,5 @@
 import "./App.css";
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 
 function App() {
@@ -7,9 +7,10 @@ function App() {
   const [page, setPage] = useState(1);
   const [totalpages, setTotalpages] = useState(0);
 
+  // Fetch products with useCallback to prevent unnecessary re-renders
   const fetchProducts = useCallback(async () => {
     await axios
-      .get(`https://dummyjson.com/products?limit=10&skip=${page * 10 - 10}`)
+      .get(`https://dummyjson.com/products?limit=10&skip=${(page - 1) * 10}`)
       .then((response) => {
         const data = response.data;
         console.log(data);
@@ -22,12 +23,13 @@ function App() {
       .catch((error) => console.log(error));
   }, [page]); // Dependencies: only rerun if `page` changes
 
+  // UseEffect hook to fetch products whenever page changes
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]); // This ensures the effect runs when fetchProducts changes
 
-  // Removed `page` dependency from `useMemo` since it's not necessary
-  useMemo(() => {
+  // Scroll to top when page changes
+  useEffect(() => {
     window.scrollTo({ top: 0 });
   }, [page]);
 
@@ -52,7 +54,7 @@ function App() {
           })}
         </div>
       )}
-      {products.length > 0 && totalpages > 0 && (
+      {totalpages > 0 && (
         <div className="pagination">
           <span
             className={page > 1 ? "" : "page_disable"}
@@ -60,7 +62,7 @@ function App() {
           >
             ◀
           </span>
-          {[...Array(totalpages > 0 ? totalpages : 1)].map((_, i) => {
+          {[...Array(totalpages)].map((_, i) => {
             return (
               <span
                 className={page === i + 1 ? "pagination_selected" : ""}
@@ -84,6 +86,7 @@ function App() {
 }
 
 export default App;
+
 
 // function App() {
 //   const [products, setProducts] = useState([]);
