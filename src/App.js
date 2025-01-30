@@ -7,27 +7,29 @@ function App() {
   const [page, setPage] = useState(1);
   const [totalpages, setTotalpages] = useState(0);
 
-  // Fetch products with useCallback to prevent unnecessary re-renders
+  // Function to fetch products
   const fetchProducts = useCallback(async () => {
-    await axios
-      .get(`https://dummyjson.com/products?limit=10&skip=${(page - 1) * 10}`)
-      .then((response) => {
-        const data = response.data;
-        console.log(data);
-        if (data && data.products) {
-          setProducts(data.products);
-          // Ensure totalpages is a valid number and rounded up
-          const totalPages = Math.ceil(data.total / 10);
-          setTotalpages(totalPages > 0 ? totalPages : 1); // Ensure at least 1 page
-        }
-      })
-      .catch((error) => console.log(error));
-  }, [page]); // Dependencies: only rerun if `page` changes
+    try {
+      const response = await axios.get(
+        `https://dummyjson.com/products?limit=10&skip=${(page - 1) * 10}`
+      );
+      const data = response.data;
+      console.log(data);
+      if (data && data.products) {
+        setProducts(data.products);
+        // Validate totalpages and round it up to the nearest integer
+        const totalPages = data.total > 0 ? Math.ceil(data.total / 10) : 1; // Ensure at least 1 page
+        setTotalpages(totalPages);
+      }
+    } catch (error) {
+      console.log("Error fetching products:", error);
+    }
+  }, [page]);
 
-  // UseEffect hook to fetch products whenever page changes
+  // Fetch products when the page changes
   useEffect(() => {
     fetchProducts();
-  }, [fetchProducts]); // This ensures the effect runs when fetchProducts changes
+  }, [fetchProducts]);
 
   // Scroll to top when page changes
   useEffect(() => {
@@ -44,17 +46,16 @@ function App() {
     <div className="App">
       {products.length > 0 && (
         <div className="container">
-          {products.map((product) => {
-            return (
-              <span key={product.id} className="products">
-                <img src={product.thumbnail} alt={product.title} />
-                <span className="title">{product.title}</span>
-                <p className="price">Price : {product.price}</p>
-              </span>
-            );
-          })}
+          {products.map((product) => (
+            <span key={product.id} className="products">
+              <img src={product.thumbnail} alt={product.title} />
+              <span className="title">{product.title}</span>
+              <p className="price">Price : {product.price}</p>
+            </span>
+          ))}
         </div>
       )}
+
       {totalpages > 0 && (
         <div className="pagination">
           <span
@@ -63,17 +64,18 @@ function App() {
           >
             ◀
           </span>
-          {[...Array(totalpages)].map((_, i) => {
-            return (
-              <span
-                className={page === i + 1 ? "pagination_selected" : ""}
-                onClick={() => selectPagehandler(i + 1)}
-                key={i}
-              >
-                {i + 1}
-              </span>
-            );
-          })}
+
+          {/* Generate pagination only if totalpages is valid */}
+          {[...Array(totalpages)].map((_, i) => (
+            <span
+              className={page === i + 1 ? "pagination_selected" : ""}
+              onClick={() => selectPagehandler(i + 1)}
+              key={i}
+            >
+              {i + 1}
+            </span>
+          ))}
+
           <span
             className={page < totalpages ? "" : "page_disable"}
             onClick={() => selectPagehandler(page + 1)}
@@ -87,6 +89,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
