@@ -17,7 +17,8 @@ function App() {
         if (data && data.products) {
           setProducts(data.products);
           // Ensure totalpages is a valid number and rounded up
-          setTotalpages(Math.ceil(data.total / 10));
+          const totalPages = Math.ceil(data.total / 10);
+          setTotalpages(totalPages > 0 ? totalPages : 1); // Ensure at least 1 page
         }
       })
       .catch((error) => console.log(error));
@@ -86,6 +87,7 @@ function App() {
 }
 
 export default App;
+
 
 
 // function App() {
