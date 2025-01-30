@@ -14,12 +14,20 @@ function App() {
         `https://dummyjson.com/products?limit=10&skip=${(page - 1) * 10}`
       );
       const data = response.data;
-      console.log(data);
+      console.log("API Data: ", data);
+
       if (data && data.products) {
         setProducts(data.products);
-        // Validate totalpages and round it up to the nearest integer
-        const totalPages = data.total > 0 ? Math.ceil(data.total / 10) : 1; // Ensure at least 1 page
+
+        // Ensure total is valid, if not, fall back to 0
+        const total = data.total && !isNaN(data.total) ? data.total : 0;
+        const totalPages = total > 0 ? Math.ceil(total / 10) : 1; // Default to 1 page
         setTotalpages(totalPages);
+
+        console.log("Total Pages: ", totalPages);
+      } else {
+        setProducts([]);
+        setTotalpages(0);
       }
     } catch (error) {
       console.log("Error fetching products:", error);
@@ -56,6 +64,7 @@ function App() {
         </div>
       )}
 
+      {/* Ensure totalpages is a valid number before generating pagination */}
       {totalpages > 0 && (
         <div className="pagination">
           <span
@@ -89,6 +98,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
